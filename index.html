@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Tracking</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        #map { height: 200px; }
+        .coordinates { font-weight: bold; margin-top: 10px; text-align: center; }
+        #video-container { height: 400px; text-align: center; }
+        img { width: 100%; height: 100%; }
+        .sms-box { margin-top: 20px; }
+        #sms { border: 1px solid #ccc; padding: 10px; height: 100px; overflow-y: auto; background-color: #f8f9fa; }
+        .slider-box { margin-top: 20px; }
+        #distanceLimit { font-weight: bold; }
+        .project-title { text-align: center; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <!-- Project Title -->
+    <h1 class="project-title">Nhóm 1 Dự án kỹ thuật</h1>
+    
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">GPS Tracking</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <!-- Navigation items removed as requested -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Video Column (larger) -->
+            <div class="col-lg-8">
+                <div id="video-container">
+                    <img src="http://172.31.99.86:5000/video_feed" width="640" height="480" alt="Live Video Feed">
+                </div>
+            </div>
+
+            <!-- Map Column (smaller) -->
+            <div class="col-lg-4">
+                <div id="map"></div>
+                <!-- Centered Latitude and Longitude Display -->
+                <div class="coordinates">
+                    <p>Latitude: <span id="lat">N/A</span></p>
+                    <p>Longitude: <span id="lng">N/A</span></p>
+                </div>
+                <!-- Distance and SMS Display Section -->
+                <div class="mt-4">
+                    <p>Distance: <span id="distance">N/A</span> meters</p>
+                </div>
+                <div class="slider-box">
+                    <label for="distanceSlider">Max Distance Limit: <span id="distanceLimit">500</span> cm</label>
+                    <input type="range" id="distanceSlider" min="0" max="500" value="500" step="1" class="form-range">
+                </div>
+                <div class="sms-box">
+                    <p><strong>Tin nhắn SMS:</strong></p>
+                    <div id="sms">Không có tin nhắn</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        var map = L.map('map').setView([0, 0], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var maxDistance = 500;  // Default max distance
+
+        // Function to fetch data for each field separately
+        function fetchData() {
+            var latUrl = 'https://api.thingspeak.com/channels/2674944/fields/1/last.json?api_key=HBIGQPFKIGGXLIKL';
+            var lngUrl = 'https://api.thingspeak.com/channels/2674944/fields/2/last.json?api_key=HBIGQPFKIGGXLIKL';
+            var distanceUrl = 'https://api.thingspeak.com/channels/2674944/fields/3/last.json?api_key=HBIGQPFKIGGXLIKL';
+            var smsUrl = 'https://api.thingspeak.com/channels/2674944/fields/4/last.json?api_key=HBIGQPFKIGGXLIKL';
+
+            // Fetch latitude
+            fetch(latUrl)
+              .then(response => response.json())
+              .then(data => {
+                  var lat = parseFloat(data.field1);
+                  updateLat(lat);
+              })
+              .catch(error => console.error('Error fetching latitude:', error));
+
+            // Fetch longitude
+            fetch(lngUrl)
+              .then(response => response.json())
+              .then(data => {
+                  var lng = parseFloat(data.field2);
+                  updateLng(lng);
+              })
+              .catch(error => console.error('Error fetching longitude:', error));
+
+            // Fetch distance
+            fetch(distanceUrl)
+              .then(response => response.json())
+              .then(data => {
+                  var distance = data.field3 || "N/A";
+                  updateDistance(distance);
+              })
+              .catch(error => console.error('Error fetching distance:', error));
+
+            // Fetch SMS
+            fetch(smsUrl)
+              .then(response => response.json())
+              .then(data => {
+                  var smsMessage = data.field4 || "Không có tin nhắn";
+                  updateSMS(smsMessage);
+              })
+              .catch(error => console.error('Error fetching SMS:', error));
+        }
+
+        // Function to update latitude
+        function updateLat(lat) {
+            var latLng = [lat, map.getCenter().lng];
+            updateMap(latLng);
+            document.getElementById('lat').textContent = lat;
+        }
+
+        // Function to update longitude
+        function updateLng(lng) {
+            var latLng = [map.getCenter().lat, lng];
+            updateMap(latLng);
+            document.getElementById('lng').textContent = lng;
+        }
+
+        // Function to update distance
+        function updateDistance(distance) {
+            document.getElementById('distance').textContent = distance;
+        }
+
+        // Function to update SMS content
+        function updateSMS(smsMessage) {
+            document.getElementById('sms').textContent = smsMessage;
+        }
+
+        // Function to update the marker on the map
+        function updateMap(latLng) {
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+            var marker = L.marker(latLng).addTo(map);
+            map.setView(latLng, map.getZoom());
+        }
+
+        // Function to send distance slider value to ThingSpeak field 4
+        function sendDistanceSliderValue(value) {
+            var updateUrl = 'https://api.thingspeak.com/update?api_key=HBIGQPFKIGGXLIKL&field4=' + value;
+
+            // Send the slider value to ThingSpeak field4
+            fetch(updateUrl)
+              .then(response => {
+                  if (response.ok) {
+                      console.log('Successfully updated distance slider value:', value);
+                  } else {
+                      console.error('Failed to update distance slider value');
+                  }
+              })
+              .catch(error => console.error('Error sending distance slider value:', error));
+        }
+
+        // Event listener for distance slider change (only when the slider is released)
+        var distanceSlider = document.getElementById('distanceSlider');
+        distanceSlider.addEventListener('change', function() {
+            var distanceValue = distanceSlider.value;
+            document.getElementById('distanceLimit').textContent = distanceValue;
+            sendDistanceSliderValue(distanceValue);  // Send the value to ThingSpeak
+        });
+
+        // Fetch data periodically (every 2 seconds)
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>
