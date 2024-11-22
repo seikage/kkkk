@@ -7,48 +7,49 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Custom styles */
         body {
             background-color: #f4f4f9;
             font-family: Arial, sans-serif;
-        }
-
-        .navbar {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .project-title {
-            font-weight: bold;
-            font-size: 2rem;
-            color: #495057;
-            margin: 20px 0;
         }
 
         #map {
             height: 300px;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .coordinates {
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .coordinates p {
-            margin: 0;
-            font-size: 1.2rem;
         }
 
         #video-container {
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        iframe {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 280px;
+        }
+
+        .tab-content {
+            margin-top: 20px;
+        }
+
+        .chart-wrapper {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            background-color: #fff;
+        }
+
+        #recognitionStatus {
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
         }
     </style>
 </head>
@@ -56,28 +57,87 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">Nhóm 1</a>
+            <a class="navbar-brand" href="#">Dự án Kỹ Thuật</a>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Tabs Navigation -->
     <div class="container mt-4">
-        <h1 class="project-title text-center">Nhóm 1 Dự án Kỹ Thuật</h1>
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
+                    Visual
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab" aria-controls="data" aria-selected="false">
+                    Specific
+                </button>
+            </li>
+        </ul>
 
-        <div class="row g-4">
-            <!-- Video Column -->
-            <div class="col-lg-8">
-                <div id="video-container">
-                    <img src="http://172.31.99.86:5000/video_feed" alt="Live Video Feed" class="img-fluid">
+        <!-- Tabs Content -->
+        <div class="tab-content">
+            <!-- Tab 1: Visual -->
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div id="video-container">
+                            <img src="http://172.31.99.86:5000/video_feed" alt="Live Video Feed" class="img-fluid">
+                        </div>
+                        <p id="recognitionStatus">Đang cập nhật trạng thái nhận diện...</p>
+                    </div>
+                    <div class="col-lg-4">
+                        <div id="map"></div>
+                        <!-- Display Coordinates -->
+                        <p id="coordinates" class="text-center mt-3">
+                            Tọa độ: <span id="lat">0</span>, <span id="lng">0</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Map and Information Column -->
-            <div class="col-lg-4">
-                <div id="map"></div>
-                <div class="coordinates mt-3">
-                    <p>Latitude: <span id="lat">N/A</span></p>
-                    <p>Longitude: <span id="lng">N/A</span></p>
+            <!-- Tab 2: Specific -->
+            <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                <!-- Input for Phone Number -->
+                <div class="input-group my-3">
+                    <input type="text" id="phoneNumber" class="form-control" placeholder="Nhập số điện thoại..." aria-label="Số điện thoại">
+                    <button class="btn btn-primary" type="button" onclick="sendPhoneNumber()">Gửi</button>
+                </div>
+                <div id="statusMessage" class="text-success mb-3"></div>
+
+                <!-- Input for String -->
+                <div class="input-group my-3">
+                    <input type="text" id="textInput" class="form-control" placeholder="Nhập chuỗi văn bản..." aria-label="Chuỗi văn bản">
+                    <button class="btn btn-primary" type="button" onclick="sendText()">Gửi</button>
+                </div>
+                <div id="textStatusMessage" class="text-success mb-3"></div>
+
+                <!-- Charts Section -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="chart-wrapper">
+                            <iframe 
+                                src="https://thingspeak.com/channels/2674944/charts/5?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15" 
+                                class="chart-container">
+                            </iframe>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-wrapper">
+                            <iframe 
+                                src="https://thingspeak.com/channels/2674944/charts/4?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15" 
+                                class="chart-container">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slider Section -->
+                <div class="my-4">
+                    <label for="slider" class="form-label">Điều chỉnh giá trị (Field 8):</label>
+                    <input type="range" id="slider" class="form-range" min="20" max="400" step="1" onmouseup="sendSliderValue()">
+                    <p class="mt-2">Giá trị hiện tại: <span id="sliderValue">20</span></p>
                 </div>
             </div>
         </div>
@@ -86,24 +146,21 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
-    
-    <!-- Custom JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+        // Map and Coordinates Functions
         var map = L.map('map').setView([0, 0], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Marker for GPS location
         var marker = L.marker([0, 0]).addTo(map);
 
-        // Function to fetch data for each field separately
         function fetchData() {
             var latUrl = 'https://api.thingspeak.com/channels/2674944/fields/1/last.json?api_key=HBIGQPFKIGGXLIKL';
             var lngUrl = 'https://api.thingspeak.com/channels/2674944/fields/2/last.json?api_key=HBIGQPFKIGGXLIKL';
-
+	    var regUrl = 'https://api.thingspeak.com/channels/2674944/fields/7/last.json?api_key=HBIGQPFKIGGXLIKL';
             fetch(latUrl)
                 .then(response => response.json())
                 .then(data => {
@@ -119,28 +176,137 @@
                     updateLng(lng);
                 })
                 .catch(error => console.error('Error fetching longitude:', error));
+	    fetch(regUrl)
+                .then(response => response.json())
+                .then(data => {
+                    var Reg = parseFloat(data.field7);
+                    updateRecognitionStatus(Reg);
+                })
+                .catch(error => console.error('Error fetching Regco:', error));
         }
 
         function updateLat(lat) {
             var lng = map.getCenter().lng;
-            updateMapAndMarker([lat, lng]);
-            document.getElementById('lat').textContent = lat;
+            updateMapAndMarker([parseFloat(lat), lng]);
         }
 
         function updateLng(lng) {
             var lat = map.getCenter().lat;
-            updateMapAndMarker([lat, lng]);
-            document.getElementById('lng').textContent = lng;
+            updateMapAndMarker([lat, parseFloat(lng)]);
         }
 
         function updateMapAndMarker(latLng) {
             map.setView(latLng, 15);
             marker.setLatLng(latLng);
+            document.getElementById("lat").textContent = latLng[0].toFixed(6);
+            document.getElementById("lng").textContent = latLng[1].toFixed(6);
         }
 
-        fetchData();
+        function updateRecognitionStatus(value) {
+            const statusMessages = [
+                "Chưa có người thân được nhận diện",
+                "Người thân nhận diện gần nhất là Vĩ Ân",
+                "Người thân nhận diện gần nhất là Tuấn Anh",
+                "Người thân nhận diện gần nhất là Hoàng Quân",
+                "Người thân nhận diện gần nhất là Đăng Khoa",
+                "Người thân nhận diện gần nhất là Minh Đăng"
+            ];
+            const status = statusMessages[parseInt(value)] || "Trạng thái không xác định";
+            document.getElementById("recognitionStatus").textContent = status;
+        }
+	fetchData();
         setInterval(fetchData, 15000);
+	// Function to send phone number to ThingSpeak
+        function sendPhoneNumber() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const statusMessage = document.getElementById('statusMessage');
+
+            if (!phoneNumber) {
+                statusMessage.textContent = "Vui lòng nhập số điện thoại.";
+                statusMessage.classList.remove("text-success");
+                statusMessage.classList.add("text-danger");
+                return;
+            }
+
+            const apiKey = '3UC2Q8YW0ODTG7P3';
+            const url = `https://api.thingspeak.com/update.json?api_key=${apiKey}&field3=${encodeURIComponent(phoneNumber)}`;
+
+            fetch(url, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        statusMessage.textContent = "Số điện thoại đã được gửi thành công!";
+                        statusMessage.classList.remove("text-danger");
+                        statusMessage.classList.add("text-success");
+                    } else {
+                        throw new Error('Lỗi khi gửi dữ liệu');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.textContent = "Không thể gửi số điện thoại.";
+                    statusMessage.classList.remove("text-success");
+                    statusMessage.classList.add("text-danger");
+                });
+        }
+	// Function to send text to thingspeak
+        function sendText() {
+            const textInput = document.getElementById('textInput').value;
+            const textStatusMessage = document.getElementById('textStatusMessage');
+
+            if (!textInput) {
+                textStatusMessage.textContent = "Vui lòng nhập tin nhắn";
+                textStatusMessage.classList.remove("text-success");
+                textStatusMessage.classList.add("text-danger");
+                return;
+            }
+
+            const apiKey = '3UC2Q8YW0ODTG7P3';
+            const url = `https://api.thingspeak.com/update.json?api_key=${apiKey}&field6=${encodeURIComponent(textInput)}`;
+
+            fetch(url, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        textStatusMessage.textContent = "Tin nhắn đã được gửi thành công!";
+                        textStatusMessage.classList.remove("text-danger");
+                        textStatusMessage.classList.add("text-success");
+                    } else {
+                        throw new Error('Lỗi khi gửi dữ liệu');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    textStatusMessage.textContent = "Không thể gửi tin nhắn.";
+                    textStatusMessage.classList.remove("text-success");
+                    textStatusMessage.classList.add("text-danger");
+                });
+        }
+
+        // Gửi giá trị slider lên ThingSpeak
+        function sendSliderValue() {
+            const slider = document.getElementById("slider");
+            const sliderValue = document.getElementById("sliderValue");
+
+            sliderValue.textContent = slider.value;
+
+            const apiKey = '3UC2Q8YW0ODTG7P3';
+            const field8Value = slider.value;
+            const url = `https://api.thingspeak.com/update.json?api_key=${apiKey}&field8=${field8Value}`;
+
+            fetch(url, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Slider value sent successfully:", field8Value);
+                    } else {
+                        throw new Error('Failed to send slider value');
+                    }
+                })
+                .catch(error => console.error('Error sending slider value:', error));
+        }
+
+        // Cập nhật giá trị slider trong thời gian thực
+        document.getElementById("slider").addEventListener("input", function () {
+            document.getElementById("sliderValue").textContent = this.value;
+        });
     </script>
 </body>
 </html>
-
