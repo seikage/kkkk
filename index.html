@@ -110,9 +110,123 @@
                 <div class="row g-4">
                     <div class="col-lg-8">
                         <div id="video-container">
-                            <img src="http://172.31.99.86:5000/video_feed" alt="Live Video Feed" class="img-fluid">
+                            <img src="https://69f9-14-224-150-140.ngrok-free.app/video_feed" alt="Live Video Feed" class="img-fluid">
                         </div>
-                        <p id="recognitionStatus">Đang cập nhật trạng thái nhận diện...</p>
+                        <!-- Updated Recognition Status -->
+                        <div id="recognition-section" class="mt-4">
+							<h5 class="text-center">Trạng thái nhận diện khuôn mặt</h5>
+							<div id="recognition-grid" class="row row-cols-2 row-cols-md-4 g-3">
+								<!-- Slots for names -->
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+											<input type="text" class="form-control mb-2" id="name1" placeholder="Người 1">
+												<p class="card-text" id="status1">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+								<!-- Repeat for all 8 slots -->
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+										<input type="text" class="form-control mb-2" id="name2" placeholder="Người 2">
+											<p class="card-text" id="status2">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+								<div class="col">
+									<div class="card text-center">
+											<div class="card-body">
+												<input type="text" class="form-control mb-2" id="name3" placeholder="Người 3">
+											<p class="card-text" id="status3">Chưa nhận diện</p>
+											</div>
+									</div>
+								</div>
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+											<input type="text" class="form-control mb-2" id="name4" placeholder="Người 4">
+											<p class="card-text" id="status4">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+											<input type="text" class="form-control mb-2" id="name5" placeholder="Người 5">
+											<p class="card-text" id="status5">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+											<input type="text" class="form-control mb-2" id="name6" placeholder="Người 6">
+											<p class="card-text" id="status6">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+											<input type="text" class="form-control mb-2" id="name7" placeholder="Người 7">
+											<p class="card-text" id="status7">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+								<div class="col">
+									<div class="card text-center">
+										<div class="card-body">
+											<input type="text" class="form-control mb-2" id="name8" placeholder="Người 8">
+											<p class="card-text" id="status8">Chưa nhận diện</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<script>
+							// Function to update recognition status
+							function fetchRecognitionStatus() {
+								const apiKey = 'Y4PXC7M4ZL2RR6T1';
+								const channelID = '2722341';
+
+								for (let i = 1; i <= 8; i++) {
+									const nameInput = document.getElementById(`name${i}`);
+									const statusElement = document.getElementById(`status${i}`);
+
+									if (!nameInput || !statusElement) continue;
+
+									const name = nameInput.value || `Người ${i}`;
+									const url = `https://api.thingspeak.com/channels/${channelID}/fields/${i}/last.json?api_key=${apiKey}`;
+
+									fetch(url)
+										.then(response => response.json())
+										.then(data => {
+											const value = parseInt(data[`field${i}`]);
+											if (value === 1) {
+												statusElement.textContent = `${name} đang có trên màn hình`;
+												statusElement.classList.add("text-success");
+												statusElement.classList.remove("text-danger");
+											} else {
+												statusElement.textContent = `${name} không có trên màn hình`;
+												statusElement.classList.add("text-danger");
+												statusElement.classList.remove("text-success");
+											}
+										})
+										.catch(error => {
+											console.error(`Error fetching field ${i}:`, error);
+											statusElement.textContent = "Lỗi kết nối";
+											statusElement.classList.add("text-danger");
+											statusElement.classList.remove("text-success");
+										});
+								}
+							}
+
+							// Fetch data every 15 seconds
+							setInterval(fetchRecognitionStatus, 500);
+							fetchRecognitionStatus();
+						</script>
                     </div>
                     <div class="col-lg-4">
                         <div id="map"></div>
@@ -159,13 +273,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Slider Section -->
-                <div class="my-4">
-                    <label for="slider" class="form-label">Điều chỉnh giá trị (Field 8):</label>
-                    <input type="range" id="slider" class="form-range" min="20" max="400" step="1" onmouseup="sendSliderValue()">
-                    <p class="mt-2">Giá trị hiện tại: <span id="sliderValue">20</span></p>
-                </div>
             </div>
         </div>
     </div>
@@ -174,7 +281,6 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
         // Map and Coordinates Functions
         var map = L.map('map').setView([0, 0], 15);
@@ -227,19 +333,6 @@
             marker.setLatLng(latLng);
             document.getElementById("lat").textContent = latLng[0].toFixed(6);
             document.getElementById("lng").textContent = latLng[1].toFixed(6);
-        }
-
-        function updateRecognitionStatus(value) {
-            const statusMessages = [
-                "Chưa có người thân được nhận diện",
-                "Người thân nhận diện gần nhất là Vĩ Ân",
-                "Người thân nhận diện gần nhất là Tuấn Anh",
-                "Người thân nhận diện gần nhất là Hoàng Quân",
-                "Người thân nhận diện gần nhất là Đăng Khoa",
-                "Người thân nhận diện gần nhất là Minh Đăng"
-            ];
-            const status = statusMessages[parseInt(value)] || "Trạng thái không xác định";
-            document.getElementById("recognitionStatus").textContent = status;
         }
 	fetchData();
         setInterval(fetchData, 15000);
@@ -307,33 +400,6 @@
                     textStatusMessage.classList.add("text-danger");
                 });
         }
-
-        // Gửi giá trị slider lên ThingSpeak
-        function sendSliderValue() {
-            const slider = document.getElementById("slider");
-            const sliderValue = document.getElementById("sliderValue");
-
-            sliderValue.textContent = slider.value;
-
-            const apiKey = '3UC2Q8YW0ODTG7P3';
-            const field8Value = slider.value;
-            const url = `https://api.thingspeak.com/update.json?api_key=${apiKey}&field8=${field8Value}`;
-
-            fetch(url, { method: 'POST' })
-                .then(response => {
-                    if (response.ok) {
-                        console.log("Slider value sent successfully:", field8Value);
-                    } else {
-                        throw new Error('Failed to send slider value');
-                    }
-                })
-                .catch(error => console.error('Error sending slider value:', error));
-        }
-
-        // Cập nhật giá trị slider trong thời gian thực
-        document.getElementById("slider").addEventListener("input", function () {
-            document.getElementById("sliderValue").textContent = this.value;
-        });
-    </script>
+</script>
 </body>
 </html>
